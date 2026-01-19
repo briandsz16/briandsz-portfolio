@@ -149,7 +149,95 @@ class CursorTrailStars {
 
 // Initialize cursor trail effect when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    new CursorTrailStars();
+    // Detect if device is mobile/touch device
+    const isTouchDevice = () => {
+        return (('ontouchstart' in window) ||
+                (navigator.maxTouchPoints > 0) ||
+                (navigator.msMaxTouchPoints > 0) ||
+                window.innerWidth <= 768);
+    };
+    
+    // Cursor trail instance
+    let cursorTrail = null;
+    
+    // Only initialize cursor trail on desktop devices
+    if (!isTouchDevice()) {
+        cursorTrail = new CursorTrailStars();
+    }
+    
+    // Handle resize to switch between desktop and mobile
+    window.addEventListener('resize', () => {
+        const isMobile = isTouchDevice();
+        
+        if (!isMobile && !cursorTrail) {
+            // Switch from mobile to desktop
+            cursorTrail = new CursorTrailStars();
+        } else if (isMobile && cursorTrail) {
+            // Switch from desktop to mobile - remove cursor trail
+            cursorTrail.canvas.remove();
+            cursorTrail = null;
+        }
+    });
+    
+    // Mobile Menu Toggle
+    const mobileMenuIcon = document.querySelector('.mobile-menu-icon');
+    const mobileNavbar = document.querySelector('.mobile-navbar');
+    const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+    
+    // Toggle mobile menu
+    mobileMenuIcon.addEventListener('click', () => {
+        mobileMenuIcon.classList.toggle('active');
+        mobileNavbar.classList.toggle('active');
+    });
+    
+    // Close menu when a link is clicked
+    mobileNavLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // Get the target section
+            const targetId = link.getAttribute('href').substring(1);
+            const targetSection = document.getElementById(targetId);
+            
+            if (targetSection) {
+                // Close the menu
+                mobileMenuIcon.classList.remove('active');
+                mobileNavbar.classList.remove('active');
+                
+                // Update active state
+                mobileNavLinks.forEach(item => item.classList.remove('active'));
+                link.classList.add('active');
+                
+                // Smooth scroll
+                targetSection.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+    
+    // Update active mobile nav link based on scroll
+    window.addEventListener('scroll', () => {
+        let currentSection = '';
+        const sections = document.querySelectorAll('section');
+        
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            
+            if (window.pageYOffset >= sectionTop - 200) {
+                currentSection = section.getAttribute('id');
+            }
+        });
+        
+        mobileNavLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === '#' + currentSection) {
+                link.classList.add('active');
+            }
+        });
+    });
     
     // Scroll to top on page load
     window.scrollTo(0, 0);
